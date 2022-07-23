@@ -43,21 +43,22 @@ def est_features_run(PATH_RUN):
         for key in list(
             settings["sharpwave_analysis_settings"]["sharpwave_features"].keys()
         ):
-            settings["sharpwave_analysis_settings"]["sharpwave_features"][
-                key
-            ] = True
+            settings["sharpwave_analysis_settings"]["sharpwave_features"][key] = True
         settings["sharpwave_analysis_settings"]["sharpwave_features"][
             "peak_left"
         ] = False
         settings["sharpwave_analysis_settings"]["sharpwave_features"][
             "peak_right"
         ] = False
-        settings["sharpwave_analysis_settings"]["sharpwave_features"][
-            "trough"
-        ] = False
+        settings["sharpwave_analysis_settings"]["sharpwave_features"]["trough"] = False
         settings["sharpwave_analysis_settings"][
             "apply_estimator_between_peaks_and_troughs"
         ] = True
+        settings["sharpwave_analysis_settings"]["filter_ranges_hz"] = [
+            [8, 20],
+            [20, 35],
+            [40, 80],
+        ]
 
         settings["sharpwave_analysis_settings"]["estimator"]["max"] = [
             "prominence",
@@ -97,41 +98,38 @@ def est_features_run(PATH_RUN):
             "HFA",
         ]
 
-        settings["features"]["fft"] = True
-        settings["features"]["fooof"] = False
-        settings["features"]["return_raw"] = False
-        settings["features"]["raw_hjorth"] = False
-        settings["features"]["sharpwave_analysis"] = False
-        settings["features"]["nolds"] = False
-        settings["features"]["bursts"] = False
-        settings["features"]["coherence"] = False
+        # settings["features"]["fft"] = True
+        # settings["features"]["fooof"] = False
+        # settings["features"]["return_raw"] = False
+        # settings["features"]["raw_hjorth"] = False
+        # settings["features"]["sharpwave_analysis"] = False
+        # settings["features"]["nolds"] = False
+        # settings["features"]["bursts"] = False
+        # settings["features"]["coherence"] = False
 
         return settings
 
     if any(x in PATH_RUN for x in ["Berlin", "Pittsburgh", "Beijing"]):
         if "Berlin" in PATH_RUN:
             PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Berlin_new"
-            PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out\Berlin" 
+            PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_all\Berlin"
         elif "Beijing" in PATH_RUN:
             PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Beijing_new"
-            PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out\Beijing"
+            PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_all\Beijing"
         elif "Pittsburgh" in PATH_RUN:
             PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Pittsburgh"
-            PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out\Pittsburgh"
+            PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_all\Pittsburgh"
+
         RUN_NAME = os.path.basename(PATH_RUN)[:-5]
-        (
-            raw,
-            data,
-            sfreq,
-            line_noise,
-            coord_list,
-            coord_names,
-        ) = nm_IO.read_BIDS_data(
+        if os.path.exists(os.path.join(PATH_OUT, RUN_NAME)) is True:
+            print("path exists")
+            return
+        (raw, data, sfreq, line_noise, coord_list, coord_names,) = nm_IO.read_BIDS_data(
             PATH_RUN=PATH_RUN, BIDS_PATH=PATH_BIDS, datatype="ieeg"
         )
 
         # cut for Berlin sub012 the last ECoG channel, due to None coordinates
-        #if "Berlin" in PATH_RUN and "sub-012" in PATH_RUN:
+        # if "Berlin" in PATH_RUN and "sub-012" in PATH_RUN:
         #    coord_list = coord_list[:-3]
         #    coord_names = coord_names[:-3]
         #    data = data[:-3, :]
@@ -169,9 +167,11 @@ def est_features_run(PATH_RUN):
             folder_name=RUN_NAME,
         )
     else:
-        PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out\Washington"
+        PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_all\Washington"
         RUN_NAME = os.path.basename(PATH_RUN[:-4])  # cut .mat
-
+        if os.path.exists(os.path.join(PATH_OUT, RUN_NAME)) is True:
+            print("path exists")
+            return
         dat = nm_IO.loadmat(PATH_RUN)
         label = dat["stim"]
 
@@ -237,7 +237,7 @@ def est_features_run(PATH_RUN):
 if __name__ == "__main__":
     # test runs:
     PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Berlin_new"
-    PATH_RUN = 'C:\\Users\\ICN_admin\\Documents\\Datasets\\Berlin_new\\sub-012\\ses-EcogLfpMedOff01\\ieeg\\sub-012_ses-EcogLfpMedOff01_task-SelfpacedRotationL_acq-StimOff_run-1_ieeg.vhdr'
+    PATH_RUN = "C:\\Users\\ICN_admin\\Documents\\Datasets\\Berlin_new\\sub-012\\ses-EcogLfpMedOff01\\ieeg\\sub-012_ses-EcogLfpMedOff01_task-SelfpacedRotationL_acq-StimOff_run-1_ieeg.vhdr"
     PATH_RUN = r"C:\Users\ICN_admin\Documents\Datasets\Berlin_new\sub-007\ses-EcogLfpMedOff01\ieeg\sub-007_ses-EcogLfpMedOff01_task-SelfpacedRotationL_acq-StimOn_run-01_ieeg.vhdr"
     PATH_RUN = r"C:\Users\ICN_admin\Documents\Datasets\Berlin_new\sub-001\ses-EcogLfpMedOn01\ieeg\sub-001_ses-EcogLfpMedOn01_task-SelfpacedForceWheel_acq-StimOff_run-01_ieeg.vhdr"
     PATH_RUN = r"C:\Users\ICN_admin\Documents\Datasets\Berlin_new\sub-004\ses-EcogLfpMedOff01\ieeg\sub-004_ses-EcogLfpMedOff01_task-SelfpacedRotationL_acq-StimOff_run-01_ieeg.vhdr"
@@ -248,45 +248,65 @@ if __name__ == "__main__":
     PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Pittsburgh"
     PATH_RUN = r"C:\Users\ICN_admin\Documents\Datasets\Pittsburgh\sub-001\ses-left\ieeg\sub-001_ses-left_task-force_run-0_ieeg.vhdr"
 
-    PATH_DATA = r"C:\Users\ICN_admin\Documents\Datasets\Data Kai Miller\motor_basic\data"
+    PATH_DATA = (
+        r"C:\Users\ICN_admin\Documents\Datasets\Data Kai Miller\motor_basic\data"
+    )
     run_files_Washington = [f for f in os.listdir(PATH_DATA) if "_mot_t_h" in f]
     PATH_RUN = os.path.join(PATH_DATA, run_files_Washington[0])
-    #est_features_run(PATH_RUN)
+    est_features_run(PATH_RUN)
 
     # collect all run files
     PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Berlin_new"
     layout = BIDSLayout(PATH_BIDS)
 
-    run_files_Berlin = layout.get(task=['SelfpacedRotationR', 'SelfpacedRotationL', 'SelfpacedForceWheel'], extension='.vhdr')
+    run_files_Berlin = layout.get(
+        task=["SelfpacedRotationR", "SelfpacedRotationL", "SelfpacedForceWheel"],
+        extension=".vhdr",
+    )
     run_files_Berlin = [f.path for f in run_files_Berlin]
 
     PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Beijing_new"
     layout = BIDSLayout(PATH_BIDS)
-    run_files_Beijing = layout.get(task=['ButtonPressL', 'ButtonPressR'], extension='.vhdr')
+    run_files_Beijing = layout.get(
+        task=["ButtonPressL", "ButtonPressR"], extension=".vhdr"
+    )
     run_files_Beijing = [f.path for f in run_files_Beijing]
 
     PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Pittsburgh"
     layout = BIDSLayout(PATH_BIDS)
-    run_files_Pittsburgh = layout.get(task=['force',], extension='.vhdr')
+    run_files_Pittsburgh = layout.get(
+        task=[
+            "force",
+        ],
+        extension=".vhdr",
+    )
     run_files_Pittsburgh = [f.path for f in run_files_Pittsburgh]
 
-    PATH_DATA = r"C:\Users\ICN_admin\Documents\Datasets\Data Kai Miller\motor_basic\data"
-    run_files_Washington = [f for f in os.listdir(PATH_DATA) if "_mot_t_h" in f]
+    PATH_DATA = (
+        r"C:\Users\ICN_admin\Documents\Datasets\Data Kai Miller\motor_basic\data"
+    )
+    run_files_Washington = [
+        os.path.join(PATH_DATA, f) for f in os.listdir(PATH_DATA) if "_mot_t_h" in f
+    ]
 
-    run_all = np.concatenate([run_files_Berlin, run_files_Beijing, run_files_Pittsburgh, run_files_Washington])
+    run_all = np.concatenate(
+        [
+            run_files_Berlin,
+            run_files_Beijing,
+            run_files_Pittsburgh,
+            run_files_Washington,
+        ]
+    )
+
+    for run_file in run_all:
+        est_features_run(run_file)
 
     # run parallel Pool
-    pool = Pool(processes=50)
-    pool.map(est_features_run, run_all)
+    # pool = Pool(processes=50)
+    # pool.map(est_features_run, run_all)
 
-    #for run_file in run_all:
-    #    est_features_run(run_file)
-
-    # run LM Decoder
-
-    #l_missing = [] 
-    #for run_file in run_files:
+    # l_missing = []
+    # for run_file in run_files:
     #    raw_arr, dat, sfreq, line_noise, coord_list, coord_names = nm_IO.read_BIDS_data(run_file.path, PATH_BIDS)
     #    if coord_list is None:
     #        l_missing.append(run_file.filename)
-
