@@ -47,6 +47,7 @@ if __name__ == "__main__":
             read_grid_points=False,
             read_channels=False,
             read_all_combined=True,
+            read_mov_detection_rates=True,
         )
         df_per = feature_reader.get_dataframe_performances(per)
 
@@ -57,3 +58,4 @@ if __name__ == "__main__":
             df_per["sub"] = RUN_NAME[:2]
         df_all.append(df_per)
     df = pd.concat(df_all)
+    df.to_csv("df_all_comb_performances.csv")

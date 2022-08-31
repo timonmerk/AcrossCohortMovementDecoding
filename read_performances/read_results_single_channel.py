@@ -43,7 +43,9 @@ if __name__ == "__main__":
             feature_dir=os.path.join(PATH_OUT, current_cohort), feature_file=RUN_NAME
         )
 
-        per = feature_reader.read_results(performance_dict={})
+        per = feature_reader.read_results(
+            performance_dict={}, read_mov_detection_rates=True
+        )
         df_per = feature_reader.get_dataframe_performances(per)
 
         df_per["cohort"] = current_cohort
@@ -72,17 +74,42 @@ if __name__ == "__main__":
     )
 
     df_ch = df_mean_runs.query('ch_type == "electrode ch"')[
-        ["sub", "cohort", "ch", "performance_test", "x", "y", "z"]
+        [
+            "sub",
+            "cohort",
+            "ch",
+            "performance_test",
+            "mov_detection_rates_test",
+            "x",
+            "y",
+            "z",
+        ]
     ]
     df_ch.to_csv("df_ch_performances.csv")
 
-    df_gp = (
-        df_mean_runs.query('ch_type == "cortex grid"')
-        .groupby(["ch"])
-        .mean()
-        .reset_index()[["sub", "ch", "performance_test", "x", "y", "z"]]
-    )
+    df_gp = df_mean_runs.query('ch_type == "electrode ch"')[
+        [
+            "sub",
+            "cohort",
+            "ch",
+            "performance_test",
+            "mov_detection_rates_test",
+            "x",
+            "y",
+            "z",
+        ]
+    ]
     df_gp.to_csv("df_grid_point_performances.csv")
+
+    pd.concat(df_best).to_pickle("df_best.p")
+
+    # df_gp = (
+    #    df_mean_runs.query('ch_type == "cortex grid"')
+    #    .groupby(["ch"])
+    #    .mean()
+    #    .reset_index()[["sub", "ch", "performance_test", "mov_detection_rates_test", "x", "y", "z"]]
+    # )
+    # df_gp.to_csv("df_grid_point_performances.csv")
 
     nm_plots.plot_df_subjects(
         df=df_comb.groupby(["sub", "cohort", "ch_type"]).mean().reset_index(),

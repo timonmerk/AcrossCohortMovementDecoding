@@ -6,6 +6,8 @@ from py_neuromodulation import nm_plots
 
 if __name__ == "__main__":
 
+    # plot movement detection rate
+
     df_best = pd.read_pickle("read_performances\\df_best.p")
     df_best = (
         df_best.groupby(["cohort", "sub", "ch_type"]).mean().reset_index()
@@ -20,12 +22,30 @@ if __name__ == "__main__":
     # read here also the df_rmap
     df_rmap = pd.read_csv("read_performances\\df_best_func_rmap_ch.csv")
     df_rmap["ch_type"] = "rmap_select"
-    df_rmap = df_rmap[["sub", "cohort", "performance_test", "ch_type"]].reset_index()
+    df_rmap = df_rmap[
+        ["sub", "cohort", "performance_test", "mov_detection_rates_test", "ch_type"]
+    ].reset_index()
 
     df_plt_all = pd.concat(
         [
-            df_best[["sub", "cohort", "performance_test", "ch_type"]],
-            df_plt_all_ch[["sub", "cohort", "performance_test", "ch_type"]],
+            df_best[
+                [
+                    "sub",
+                    "cohort",
+                    "performance_test",
+                    "mov_detection_rates_test",
+                    "ch_type",
+                ]
+            ],
+            df_plt_all_ch[
+                [
+                    "sub",
+                    "cohort",
+                    "performance_test",
+                    "mov_detection_rates_test",
+                    "ch_type",
+                ]
+            ],
             df_rmap,
         ]
     )
@@ -34,6 +54,7 @@ if __name__ == "__main__":
         columns={
             "cohort": "Cohort",
             "performance_test": "Balanced Accuracy",
+            "mov_detection_rates_test": "Movement Detection Rate",
             "ch_type": "Channel Type",
         }
     )

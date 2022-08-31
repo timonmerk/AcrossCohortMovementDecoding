@@ -7,8 +7,8 @@ addpath(genpath('C:\code\leaddbs'))
 % spm('defaults','eeg')
 
 %T = readtable('df_all_3_cohorts_custom.csv','Format','%f%s%s%s%f%f%f%f%f%f%f%f%f');
-T = readtable('df_ch_performances.csv');
-%T = readtable('df_grid_point_performances.csv');
+%T = readtable('df_ch_performances.csv');
+T = readtable('df_grid_point_performances.csv');
 
 %mni = [T.x_coord T.y_coord T.z_coord];
 %md = T.mov_detection_rate_test;
@@ -37,12 +37,12 @@ camlight
 material dull
 % alpha 1
 hold on
-cm = colormap('viridis');  % 
-wjn_plot_colored_spheres(nmni,ba-0.5, 1,cm)  %wjn_gaussianize 
+cm = colormap('jet');  % viridis
+wjn_plot_colored_spheres(nmni,ba-0.5, 1,cm)  %wjn_gaussianize % change r to 2
 %colorbar
 hold on 
 camzoom(2)
 set(gcf,'color','none')
-myprint('my_per_viridis_ch')
+myprint('my_per_gp_2cm')
 
 

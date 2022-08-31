@@ -17,34 +17,48 @@ df = pd.DataFrame()
 #        "XGB_performance_leave_1_sub_out_within_coh_RMAP.npy",
 # ]
 
-model = "XGB1TimeStep"
-for idx, name_cross_val in enumerate(
-    [
-        f"{model}_performance_leave_1_cohort_out_RMAP.npy",
-        f"{model}_performance_leave_1_sub_out_across_coh_RMAP.npy",
-        f"{model}_performance_leave_1_sub_out_within_coh_RMAP.npy",
-    ]
-):
+for model in ["LMGridPoints", "LM"]:
+    if model == "LM":
+        model_sel_name = "RMAP"
+    else:
+        model_sel_name = "GridPoints"
+    for idx, name_cross_val in enumerate(
+        [
+            f"{model}_performance_leave_1_cohort_out_RMAP.npy",
+            f"{model}_performance_leave_1_sub_out_across_coh_RMAP.npy",
+            f"{model}_performance_leave_1_sub_out_within_coh_RMAP.npy",
+        ]
+    ):
 
-    p = np.load(
-        os.path.join(PATH_CROSS_VAL_BASE, name_cross_val), allow_pickle="TRUE"
-    ).item()
+        p = np.load(
+            os.path.join(PATH_CROSS_VAL_BASE, name_cross_val), allow_pickle="TRUE"
+        ).item()
 
-    for cohort_test in list(p.keys()):
-        for sub_test in list(p[cohort_test].keys()):
-            df = df.append(
-                {
-                    "performance_test": p[cohort_test][sub_test].score_test[0],
-                    "cohort_test": cohort_test,
-                    "sub_test": sub_test,
-                    "cross_val_type": [
-                        "leave one cohort out",
-                        "leave one subject out across cohorts",
-                        "leave one subject out within cohorts",
-                    ][idx],
-                },
-                ignore_index=True,
-            )
+        for cohort_test in list(p.keys()):
+            for sub_test in list(p[cohort_test].keys()):
+                df = df.append(
+                    {
+                        "Test Performance": p[cohort_test][sub_test].score_test[0],
+                        "cohort_test": cohort_test,
+                        "sub_test": sub_test,
+                        "Model Type": model_sel_name,
+                        "Cross Validation Type": [
+                            "leave one cohort out",
+                            "leave one subject out across cohorts",
+                            "leave one subject out within cohorts",
+                        ][idx],
+                    },
+                    ignore_index=True,
+                )
+
+nm_plots.plot_df_subjects(
+    df=df,
+    x_col="Cross Validation Type",
+    y_col="Test Performance",
+    title="Cross Validation Performances",
+    hue="Model Type",
+    PATH_SAVE=os.path.join("figure", f"cross_val_model_comparison_1timestep.pdf"),
+)
 
 nm_plots.plot_df_subjects(
     df=df,
@@ -52,12 +66,17 @@ nm_plots.plot_df_subjects(
     y_col="performance_test",
     title="Cross Validation Performances",
     hue="cohort_test",
-    PATH_SAVE=os.path.join("figure", "cross_val_xgb_1timestep.pdf"),
+    PATH_SAVE=os.path.join("figure", f"cross_val_{model}_1timestep.pdf"),
 )
 
 # 2. p2p predictions
 
-for model_name in ["LM", "XGB"]:
+df = pd.DataFrame()
+for model_name in ["LMGridPoints", "LM"]:  # ["LM", "XGB"]:
+    if model_name == "LM":
+        model_sel_name = "RMAP"
+    else:
+        model_sel_name = "GridPoints"
     p = np.load(
         os.path.join(
             PATH_CROSS_VAL_BASE, f"{model_name}_performance_p2p_RMAP.npy"
@@ -71,7 +90,7 @@ for model_name in ["LM", "XGB"]:
     per_per = np.zeros([38, 38])
     idx_train = 0
     idx_test = 0
-    df = pd.DataFrame()
+    # df = pd.DataFrame() # seelct this for individual plot
     for cohort_test in list(p.keys()):
         for sub_test in list(p[cohort_test].keys()):
             for cohort_train in list(p[cohort_test][sub_test].keys()):
@@ -92,7 +111,8 @@ for model_name in ["LM", "XGB"]:
                             "sub_test": sub_test,
                             "cohort_train": cohort_train,
                             "sub_train": sub_train,
-                            "performance_test": per_insert,
+                            "Performance Test": per_insert,
+                            "Model Type": model_sel_name,
                         },
                         ignore_index=True,
                     )
@@ -126,3 +146,13 @@ for model_name in ["LM", "XGB"]:
         f"p2p_{model_name}.pdf",
         bbox_inches="tight",
     )
+
+
+nm_plots.plot_df_subjects(
+    df=df,
+    x_col="Model Type",
+    y_col="Performance Test",
+    title="P2P Cross Validation Performances",
+    hue=None,
+    PATH_SAVE=os.path.join("figure", f"p2p_comp_model_type_comparison.pdf"),
+)
