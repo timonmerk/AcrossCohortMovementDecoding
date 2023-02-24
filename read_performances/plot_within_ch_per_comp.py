@@ -14,6 +14,18 @@ if __name__ == "__main__":
     )  # mean over runs!
     df_best.drop(df_best.filter(regex="index"), axis=1, inplace=True)
 
+    # read here df_ch_performances.csv instead
+    df_ch = pd.read_csv("read_performances\\df_ch_performances.csv")
+    df_ch = df_ch.groupby(["cohort", "sub"]).max().reset_index()  # best channel
+    df_ch["ch_type"] = "Individual channels"
+    df_ch = df_ch[["sub", "cohort", "performance_test", "mov_detection_rates_test", "ch_type"]]
+
+    # read grid point performances
+    df_gp = pd.read_csv("read_performances\\df_grid_point_performances.csv")
+    df_gp = df_gp.groupby(["cohort", "sub"]).max().reset_index()
+    df_gp["ch_type"] = "Grid points"
+    df_gp = df_gp[["sub", "cohort", "performance_test", "mov_detection_rates_test", "ch_type"]]
+
     df_all_ch = pd.read_csv("read_performances\\df_all_comb_performances.csv")
     df_plt_all_ch = df_all_ch.groupby(["sub", "cohort"]).mean().reset_index()
     df_plt_all_ch.drop(df_plt_all_ch.filter(regex="Unname"), axis=1, inplace=True)
@@ -28,15 +40,8 @@ if __name__ == "__main__":
 
     df_plt_all = pd.concat(
         [
-            df_best[
-                [
-                    "sub",
-                    "cohort",
-                    "performance_test",
-                    "mov_detection_rates_test",
-                    "ch_type",
-                ]
-            ],
+            df_ch,
+            df_gp,
             df_plt_all_ch[
                 [
                     "sub",
@@ -64,5 +69,14 @@ if __name__ == "__main__":
         y_col="Balanced Accuracy",
         hue="Channel Type",
         title="Individual subject performances",
-        PATH_SAVE=os.path.join("figure", "ind_sub_comp_with_rmap.pdf"),
+        PATH_SAVE=os.path.join("figure", "ind_sub_comp_with_rmap_v2fix.pdf"),
+    )
+
+    nm_plots.plot_df_subjects(
+        df=df_plt_all,
+        x_col="Cohort",
+        y_col="Movement Detection Rate",
+        hue="Channel Type",
+        title="Individual subject performances",
+        PATH_SAVE=os.path.join("figure", "ind_sub_comp_with_rmap_mov_det_v2fix.pdf"),
     )

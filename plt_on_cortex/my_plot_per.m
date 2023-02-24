@@ -37,7 +37,7 @@ camlight
 material dull
 % alpha 1
 hold on
-cm = colormap('jet');  % viridis
+cm = colormap('viridis');  % viridis % jet
 wjn_plot_colored_spheres(nmni,ba-0.5, 1,cm)  %wjn_gaussianize % change r to 2
 %colorbar
 hold on 

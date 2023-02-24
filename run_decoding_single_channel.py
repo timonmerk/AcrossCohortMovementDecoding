@@ -72,6 +72,7 @@ def run_decoding(PATH_OUT_RUN):
 
 
 if __name__ == "__main__":
+
     PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_fft"
     files_all = []
     for cohort in ["Pittsburgh", "Beijing", "Washington", "Berlin"]:
