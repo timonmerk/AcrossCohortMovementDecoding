@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn import metrics, linear_model, model_selection
 
 import py_neuromodulation
-from py_neuromodulation import nm_decode, nm_RMAP, nm_plots
+from py_neuromodulation import nm_decode, nm_RMAP, nm_plots, nm_stats
 
 # 1. leave one cohort out
 PATH_CROSS_VAL_BASE = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_fft"
@@ -50,6 +50,52 @@ for model in ["LMGridPoints", "LM"]:
                     },
                     ignore_index=True,
                 )
+
+# print performances
+print(df[(df["Cross Validation Type"] == "leave one subject out within cohorts") & (df["Model Type"] == "GridPoints")]["Test Performance"].mean())
+print(df[(df["Cross Validation Type"] == "leave one subject out within cohorts") & (df["Model Type"] == "GridPoints")]["Test Performance"].std())
+
+print(df[(df["Cross Validation Type"] == "leave one subject out within cohorts") & (df["Model Type"] == "RMAP")]["Test Performance"].mean())
+print(df[(df["Cross Validation Type"] == "leave one subject out within cohorts") & (df["Model Type"] == "RMAP")]["Test Performance"].std())
+
+print(df[(df["Cross Validation Type"] == "leave one subject out across cohorts") & (df["Model Type"] == "GridPoints")]["Test Performance"].mean())
+print(df[(df["Cross Validation Type"] == "leave one subject out across cohorts") & (df["Model Type"] == "GridPoints")]["Test Performance"].std())
+
+print(df[(df["Cross Validation Type"] == "leave one subject out across cohorts") & (df["Model Type"] == "RMAP")]["Test Performance"].mean())
+print(df[(df["Cross Validation Type"] == "leave one subject out across cohorts") & (df["Model Type"] == "RMAP")]["Test Performance"].std())
+
+print(df[(df["Cross Validation Type"] == "leave one cohort out") & (df["Model Type"] == "GridPoints")]["Test Performance"].mean())
+print(df[(df["Cross Validation Type"] == "leave one cohort out") & (df["Model Type"] == "GridPoints")]["Test Performance"].std())
+
+print(df[(df["Cross Validation Type"] == "leave one cohort out") & (df["Model Type"] == "RMAP")]["Test Performance"].mean())
+print(df[(df["Cross Validation Type"] == "leave one cohort out") & (df["Model Type"] == "RMAP")]["Test Performance"].std())
+
+x=np.array(df[(df["Cross Validation Type"] == "leave one cohort out") & (df["Model Type"] == "RMAP")]["Test Performance"])
+y=np.repeat(0.5, x.shape[0])
+nm_stats.permutationTest_relative(y, x, False, p=5000)
+
+x=np.array(df[(df["Cross Validation Type"] == "leave one cohort out") & (df["Model Type"] == "GridPoints")]["Test Performance"])
+y=np.repeat(0.5, x.shape[0])
+nm_stats.permutationTest_relative(y, x, False, p=5000)
+
+nm_stats.permutationTest_relative(
+    np.array(df[(df["Cross Validation Type"] == "leave one subject out across cohorts") & (df["Model Type"] == "RMAP")]["Test Performance"]),
+    np.array(df[(df["Cross Validation Type"] == "leave one subject out across cohorts") & (df["Model Type"] == "GridPoints")]["Test Performance"]),
+    False,
+    p=5000
+)
+nm_stats.permutationTest_relative(
+    np.array(df[(df["Cross Validation Type"] == "leave one subject out within cohorts") & (df["Model Type"] == "RMAP")]["Test Performance"]),
+    np.array(df[(df["Cross Validation Type"] == "leave one subject out within cohorts") & (df["Model Type"] == "GridPoints")]["Test Performance"]),
+    False,
+    p=5000
+)
+nm_stats.permutationTest_relative(
+    np.array(df[(df["Cross Validation Type"] == "leave one cohort out") & (df["Model Type"] == "RMAP")]["Test Performance"]),
+    np.array(df[(df["Cross Validation Type"] == "leave one cohort out") & (df["Model Type"] == "GridPoints")]["Test Performance"]),
+    False,
+    p=5000
+)
 
 nm_plots.plot_df_subjects(
     df=df,
