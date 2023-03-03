@@ -3,8 +3,27 @@ import numpy as np
 from py_neuromodulation import nm_stats
 import mne
 from matplotlib import pyplot as plt
+import pickle
 
-# get example time series
+# get run numbers:
+with open('read_performances\\df_all.p', 'rb') as handle:
+    df = pickle.load(handle)  # theta, alpha, low beta, high beta, low gamma, broadband
+
+# number of total recordings
+print(df.query("cohort == 'Berlin'").groupby(["cohort", "sub", "run"]).mean().shape[0])
+runs_Berlin = list(df.query("cohort == 'Berlin'").groupby(["cohort", "sub", "run"]).mean().reset_index()["run"])
+
+# print number of Berlin MedOn recordings
+print(len([r for r in runs_Berlin if "MedOn" in r]))
+
+runs = list(df.groupby(["cohort", "sub", "run"]).mean().reset_index()["run"])
+
+# number of Pittsburgh recording
+print(df.query("cohort == 'Pittsburgh'").groupby(["cohort", "sub", "run"]).mean().shape[0])
+
+print(df.query("cohort == 'Washington'").groupby(["cohort", "sub", "run"]).mean().shape[0])
+
+# get example time series for STIM ON and OFF
 PATH_STIM_ON = r"C:\Users\ICN_admin\Documents\Datasets\Berlin\sub-002\ses-EcogLfpMedOff03\ieeg\sub-002_ses-EcogLfpMedOff03_task-SelfpacedRotationR_acq-StimOn_run-01_ieeg.vhdr"
 PATH_STIM_OFF = r"C:\Users\ICN_admin\Documents\Datasets\Berlin\sub-002\ses-EcogLfpMedOff03\ieeg\sub-002_ses-EcogLfpMedOff03_task-SelfpacedRotationR_acq-StimOff_run-01_ieeg.vhdr"
 
@@ -30,6 +49,10 @@ plt.savefig(
 )
 
 raw_p.plot()
+
+
+# get statistics
+
 
 # mean performances individual channels
 df = pd.read_csv("plt_on_cortex\\df_ch_performances.csv")

@@ -24,10 +24,11 @@ ap_runner = nm_across_patient_decoding.AcrossPatientRunner(
     cohorts=["Beijing", "Pittsburgh", "Berlin"],
     use_nested_cv=False,
     ML_model_name="LMGridPoints",
+    load_channel_all=True
 )
 
 
-def get_data_stim(stim_on: bool = True):
+def get_data_stim(sub: str, ch: str, stim_on: bool = True):
     X_train = []
     y_train = []
     for f in ap_runner.ch_all["Berlin"][sub][ch].keys():
@@ -54,8 +55,8 @@ for sub in df_STIMON["sub"].unique():
     per_ON = df_STIMON.query("sub == @sub and ch == @ch")["performance_test"].mean()
     per_OFF = df_STIMOFF.query("sub == @sub and ch == @ch")["performance_test"].mean()
 
-    X_train, y_train = get_data_stim(stim_on=False)
-    X_test, y_test = get_data_stim(stim_on=True)
+    X_train, y_train = get_data_stim(sub, ch, stim_on=False)
+    X_test, y_test = get_data_stim(sub, ch, stim_on=True)
 
     decoder = ap_runner.init_decoder()
     model = decoder.wrapper_model_train(
@@ -80,6 +81,7 @@ for sub in df_STIMON["sub"].unique():
     df_comp_STIM = df_comp_STIM.append(
         {
             "Test Performance": per_ON,
+            "Test Performance Detection Rate" :  cv_res.mov_detection_rates_test[0],
             "Subject": sub,
             "Model Type": "STIM ON",
         },
@@ -89,6 +91,7 @@ for sub in df_STIMON["sub"].unique():
     df_comp_STIM = df_comp_STIM.append(
         {
             "Test Performance": per_OFF,
+            "Test Performance Detection Rate" :  cv_res.mov_detection_rates_test[0],
             "Subject": sub,
             "Model Type": "STIM OFF",
         },
@@ -98,14 +101,15 @@ for sub in df_STIMON["sub"].unique():
     df_comp_STIM = df_comp_STIM.append(
         {
             "Test Performance": cv_res.score_test[0],
+            "Test Performance Detection Rate" :  cv_res.mov_detection_rates_test[0],
             "Subject": sub,
             "Model Type": "STIM OFF->ON Predict",
         },
         ignore_index=True,
     )
 
-    X_train, y_train = get_data_stim(stim_on=True)
-    X_test, y_test = get_data_stim(stim_on=False)
+    X_train, y_train = get_data_stim(sub, ch, stim_on=True)
+    X_test, y_test = get_data_stim(sub, ch, stim_on=False)
 
     decoder = ap_runner.init_decoder()
     model = decoder.wrapper_model_train(
@@ -126,6 +130,7 @@ for sub in df_STIMON["sub"].unique():
     df_comp_STIM = df_comp_STIM.append(
         {
             "Test Performance": cv_res.score_test[0],
+            "Test Performance Detection Rate" :  cv_res.mov_detection_rates_test[0],
             "Subject": sub,
             "Model Type": "STIM ON->OFF Predict",
         },
@@ -138,14 +143,20 @@ df_comp_STIM.to_csv("df_STIM_ON_OFF.csv")
 # but report the performances separate for both classes
 # add also STIM ON --> OFF
 
-# nm_plots.plot_df_subjects(
-#    df=df_comp_STIM,
-#    x_col="Subject",
-#    y_col="Test Performance",
-#    title="Berlin Stim On/Off Comparison",
-#    hue="Model Type",
-#    PATH_SAVE=os.path.join("figure", f"stim_off_on_comp_predict.pdf"),
-# )
+
+nm_plots.plot_df_subjects(
+    df=df_comp_STIM,
+    x_col="Model Type",
+    y_col="Test Performance Detection Rate",  # Test Performance
+    title="Berlin Stim On/Off Comparison",
+    hue=None,
+    figsize_tuple=(4, 5)
+    #PATH_SAVE=os.path.join("figure", f"stim_off_on_comp_predict.pdf"),
+)
+plt.ylim(0.5, 1.05)
+plt.ylabel("Movement detection rate")  # Balanced accuracy
+plt.tight_layout()
+
 
 plt.figure(figsize=(6, 5), dpi=300)
 sb.barplot(

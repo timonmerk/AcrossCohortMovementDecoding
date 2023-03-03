@@ -82,6 +82,10 @@ df_updrs = pd.concat([df_b, df_p, df_ber])
 
 df_rmap_corr = pd.read_csv("across patient running\\RMAP\\df_best_func_rmap_ch.csv")
 df_rmap_corr = df_rmap_corr.query("cohort != 'Washington'")
+df_rmap_corr = df_rmap_corr.query("cohort != 'Washington' and cohort != 'Pittsburgh'")
+
+df_rmap_corr = pd.read_csv("across patient running\\RMAP\\df_best_func_rmap_ch.csv")
+df_rmap_corr = df_rmap_corr.query("cohort == 'Beijing' or cohort == 'Berlin'")
 df_comb = pd.merge(df_rmap_corr, df_updrs, on=["sub", "cohort"])
 df_comb = df_comb.dropna()
 
@@ -90,4 +94,12 @@ nm_plots.reg_plot(
     x_col="performance_test",
     y_col="UPDRS_total",
     out_path_save=os.path.join("figure", "updrs_corr_per.pdf"),
+)
+
+
+nm_plots.reg_plot(
+    data=df_comb,
+    x_col="performance_test",
+    y_col="UPDRS_total",
+    out_path_save=None,
 )

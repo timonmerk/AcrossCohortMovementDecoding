@@ -9,6 +9,7 @@ addpath(genpath('C:\code\leaddbs'))
 %T = readtable('df_all_3_cohorts_custom.csv','Format','%f%s%s%s%f%f%f%f%f%f%f%f%f');
 %T = readtable('df_ch_performances.csv');
 T = readtable('df_ch_performances.csv');
+T = readtable('df_grid_point_performances.csv');
 
 %mni = [T.x_coord T.y_coord T.z_coord];
 %md = T.mov_detection_rate_test;
@@ -22,7 +23,7 @@ ba(isnan(ba))=0.5;
 mni = [abs(T.x) T.y T.z];
 ctx=export(gifti('BrainMesh_ICBM152Left_smoothed.gii'));
 
-mni_coords = mni(82:87, :);
+mni_coords = mni;
 
 nmni=[];
 for a=1:size(mni_coords,1)
@@ -34,6 +35,26 @@ for a=1:size(mni_coords,1)
       );
     nmni(a,:) = ctx.vertices(i(a),:);
 end
+
+% schematic for Grid points:
+c_vec_black = ones(39, 1);
+
+close all, 
+figure('color','w')
+p=wjn_plot_surface(ctx);
+figone(40,40)
+view(-90,15)
+camlight 
+material dull
+% alpha 1
+hold on
+cm = colormap('gray');  % viridis % jet
+wjn_plot_colored_spheres(nmni, c_vec_black, 4,cm)  %wjn_gaussianize % change r to 2
+%colorbar
+hold on 
+camzoom(2)
+set(gcf,'color','none')
+myprint('bipolar_reref')
 
 % Bipolar Rereferencing
 c_vec = [0, 0, 0.25, 0.5, 0.25, 0];

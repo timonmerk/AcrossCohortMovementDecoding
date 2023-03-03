@@ -66,4 +66,13 @@ for idx in range(len(dat_out_ON)):
 
     per_out.append(metrics.balanced_accuracy_score(label_out_ON[idx], pr))
 
-plt.plot(per_out)
+plt.figure(figsize=(4, 3), dpi=300)
+plt.bar(np.arange(len(per_out)), per_out)
+plt.xlabel("Test subject number")
+plt.ylim(0.5, 0.75)
+plt.axhline(0.73, label="Patient Ind. OFF->ON", color="gray")
+plt.ylabel("Balanced accuracy")
+plt.title("All Stim-OFF data predict Stim-ON")
+plt.legend()
+plt.tight_layout()
+

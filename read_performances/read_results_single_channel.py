@@ -69,6 +69,7 @@ if __name__ == "__main__":
     df_comb["x"] = df_comb["coord"].apply(lambda x: x[0])
     df_comb["y"] = df_comb["coord"].apply(lambda x: x[1])
     df_comb["z"] = df_comb["coord"].apply(lambda x: x[2])
+    df_comb.to_pickle("read_performances\\df_all.p")
     df_mean_runs = (
         df_comb.groupby(["sub", "cohort", "ch_type", "ch"]).mean().reset_index()
     )
