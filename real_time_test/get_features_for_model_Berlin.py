@@ -41,7 +41,6 @@ def est_features_run(PATH_RUN):
     PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Berlin"
     PATH_OUT = os.path.join(PATH_OUT_BASE, "Berlin")
 
-
     RUN_NAME = os.path.basename(PATH_RUN)[:-5]
     if os.path.exists(os.path.join(PATH_OUT, RUN_NAME)) is True:
         print("path exists")

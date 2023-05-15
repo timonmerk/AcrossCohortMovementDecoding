@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 
 from py_neuromodulation import nm_plots
 
@@ -64,19 +65,19 @@ if __name__ == "__main__":
         }
     )
     nm_plots.plot_df_subjects(
-        df=df_plt_all,
+        df=df_plt_all[np.logical_or(df_plt_all["Channel Type"].str.contains("all combined"), df_plt_all["Channel Type"].str.contains("Individual"))] ,
         x_col="Cohort",
         y_col="Balanced Accuracy",
         hue="Channel Type",
         title="Individual subject performances",
-        PATH_SAVE=os.path.join("figure", "ind_sub_comp_with_rmap_v2fix.pdf"),
+        PATH_SAVE=os.path.join("figure", "ind_sub_comp_with_rmap_v3.pdf"),
     )
 
     nm_plots.plot_df_subjects(
-        df=df_plt_all,
+        df=df_plt_all[np.logical_or(df_plt_all["Channel Type"].str.contains("all combined"), df_plt_all["Channel Type"].str.contains("Individual"))] ,
         x_col="Cohort",
         y_col="Movement Detection Rate",
         hue="Channel Type",
         title="Individual subject performances",
-        PATH_SAVE=os.path.join("figure", "ind_sub_comp_with_rmap_mov_det_v2fix.pdf"),
+        PATH_SAVE=os.path.join("figure", "ind_sub_comp_with_rmap_mov_det_v3.pdf"),
     )

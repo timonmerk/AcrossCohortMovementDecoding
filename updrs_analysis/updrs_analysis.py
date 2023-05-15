@@ -30,17 +30,16 @@ updrs_scores_Berlin = {
 }
 
 updrs_scores_Beijing = {
-    "FOGC001": 47,
     "FOG006": 61,
     "FOG008": 70,
     "FOG010": 51,
     "FOG011": 52,
-    "FOG013": 58,
-    "FOG021": 39,
+    "FOG012": 58,
     "FOG014": 41,
     "FOG016": 55,
-    "FOG012": 46,
+    "FOG021" : 39,
     "FOG022": 27,
+    "FOGC001": 47,
 }
 
 updrs_scores_Pittsburgh = {

@@ -27,21 +27,32 @@ print(df.query("cohort == 'Washington'").groupby(["cohort", "sub", "run"]).mean(
 PATH_STIM_ON = r"C:\Users\ICN_admin\Documents\Datasets\Berlin\sub-002\ses-EcogLfpMedOff03\ieeg\sub-002_ses-EcogLfpMedOff03_task-SelfpacedRotationR_acq-StimOn_run-01_ieeg.vhdr"
 PATH_STIM_OFF = r"C:\Users\ICN_admin\Documents\Datasets\Berlin\sub-002\ses-EcogLfpMedOff03\ieeg\sub-002_ses-EcogLfpMedOff03_task-SelfpacedRotationR_acq-StimOff_run-01_ieeg.vhdr"
 
-raw = mne.io.read_raw_brainvision(PATH_STIM_ON)
-ch_names = [c for c in raw.ch_names if "ECOG" in c]
-raw_p = raw.pick(picks=ch_names)
+OFFSET = int(1375 * 67.5 - 5)
 
-dat_plt_on = raw_p.get_data()[1, 5000:5000+int(raw_p.info["sfreq"])]
-
-raw = mne.io.read_raw_brainvision(PATH_STIM_OFF)
-ch_names = [c for c in raw.ch_names if "ECOG" in c]
+raw = mne.io.read_raw_brainvision(PATH_STIM_ON, preload=True)
+ch_names = [c for c in raw.ch_names if "ECOG" in c or "SQUARED_ROTATION" in c]
 raw_p = raw.pick(picks=ch_names)
-dat_plt_off = raw_p.get_data()[1, 5000:5000+int(raw_p.info["sfreq"])]
+raw_p = raw_p.filter(l_freq=2, h_freq=None)
+
+dat_plt_on = raw_p.get_data()[5, OFFSET:OFFSET+int(raw_p.info["sfreq"])*10]
+
+OFFSET = int(1375 * 202.5 - 5)
+
+raw = mne.io.read_raw_brainvision(PATH_STIM_OFF, preload=True)
+ch_names = [c for c in raw.ch_names if "ECOG" in c or "SQUARED_ROTATION" in c]
+raw_p = raw.pick(picks=ch_names)
+raw_p = raw_p.filter(l_freq=2, h_freq=None)
+dat_plt_off = raw_p.get_data()[5, OFFSET:OFFSET+int(raw_p.info["sfreq"])*10]
 
 
 plt.figure(figsize=(4, 3), dpi=300)
-plt.plot(dat_plt_off, label="OFF")
-plt.plot(dat_plt_on, label="ON")
+plt.plot(dat_plt_off, label="STIM OFF", linewidth=1)
+plt.plot(dat_plt_on+300, label="STIM ON", linewidth=1)
+plt.xticks(np.arange(0, 10*1375, 1375), np.arange(0, 10*1375, 1375)/1375)
+plt.xlabel("Time [s]")
+plt.ylabel("Amplitude a.u.")
+plt.title("Time series example")
+plt.legend()
 
 plt.savefig(
     "figure\\example_stim_on_off_time_trace.pdf",
@@ -55,7 +66,7 @@ raw_p.plot()
 
 
 # mean performances individual channels
-df = pd.read_csv("plt_on_cortex\\df_ch_performances.csv")
+df = pd.read_csv("read_performances\\df_ch_performances.csv")
 print(f"{np.mean(df['performance_test'])} {np.std(df['performance_test'])}")
 
 df_grouped = df.groupby(["cohort", "sub"]).max()
@@ -108,4 +119,7 @@ y_ = np.array(df[df["Model Type"] == "STIM ON->OFF Predict"]["Test Performance"]
 print(nm_stats.permutationTest_relative(x_, y_, False, None, 5000))
 #p=0.4
 
-# read here cross-validation performances
+# read movement detection results for stim 
+df = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_with_detection_rates.csv")
+
+print(f"{df[df['Model Type'] == 'STIM OFF->ON Predict']['Test Performance Detection Rate'].mean()} {df[df['Model Type'] == 'STIM OFF->ON Predict']['Test Performance Detection Rate'].std()}")
