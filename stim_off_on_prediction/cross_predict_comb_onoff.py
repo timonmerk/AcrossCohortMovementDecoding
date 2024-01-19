@@ -8,10 +8,14 @@ import seaborn as sb
 from matplotlib import pyplot as plt
 from py_neuromodulation import nm_stats, nm_across_patient_decoding, nm_decode, nm_plots
 
+RUN_PARRM_STIM_DATA = True
+
 df_rmap_corr = pd.read_csv("across patient running\\RMAP\\df_best_func_rmap_ch.csv")
 
-with open(os.path.join("read_performances", "df_all.p"), "rb") as handle:
-    df_all = pickle.load(handle)
+# with open(os.path.join("read_performances", "df_all.p"), "rb") as handle:
+#    df_all = pickle.load(handle)
+
+df_all = pd.read_pickle(os.path.join("read_performances", "df_all.p"))
 
 df = df_all.query("ch_type == 'electrode ch' and cohort != 'Washington'")
 
@@ -24,10 +28,18 @@ ap_runner = nm_across_patient_decoding.AcrossPatientRunner(
     cohorts=["Beijing", "Pittsburgh", "Berlin"],
     use_nested_cv=False,
     ML_model_name="LMGridPoints",
+    load_channel_all=True,
+)
+
+ap_runner_parrm = nm_across_patient_decoding.AcrossPatientRunner(
+    outpath=r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_parrm_removed",
+    cohorts=["Berlin"],
+    use_nested_cv=False,
+    load_channel_all=True,
 )
 
 
-def get_data_stim(stim_on: bool = True):
+def get_data_stim(ap_runner, stim_on: bool = True):
     X_train = []
     y_train = []
     for f in ap_runner.ch_all["Berlin"][sub][ch].keys():
@@ -54,8 +66,12 @@ for sub in df_STIMON["sub"].unique():
     per_ON = df_STIMON.query("sub == @sub and ch == @ch")["performance_test"].mean()
     per_OFF = df_STIMOFF.query("sub == @sub and ch == @ch")["performance_test"].mean()
 
-    X_off, y_off = get_data_stim(stim_on=False)
-    X_on, y_on = get_data_stim(stim_on=True)
+    if RUN_PARRM_STIM_DATA is True:
+        X_on, y_on = get_data_stim(ap_runner_parrm, stim_on=True)
+    else:
+        X_on, y_on = get_data_stim(ap_runner, stim_on=True)
+
+    X_off, y_off = get_data_stim(ap_runner, stim_on=False)
 
     idx_shuffle = np.random.permutation(y_on.shape[0])
     idx_train = int(0.66 * y_on.shape[0])
@@ -90,13 +106,18 @@ for sub in df_STIMON["sub"].unique():
         save_data=False,
     )
 
-    df_comp_STIM = df_comp_STIM.append(
-        {
-            "Test Performance": cv_res.score_test[0],
-            "Subject": sub,
-            "Model Type": "STIM ON-OFF->ON Predict",
-        },
-        ignore_index=True,
+    df_comp_STIM = pd.concat(
+        [
+            df_comp_STIM,
+            pd.DataFrame(
+                {
+                    "Test Performance": cv_res.score_test[0],
+                    "Subject": sub,
+                    "Model Type": "STIM ON-OFF->ON Predict",
+                },
+                index=[0],
+            ),
+        ]
     )
 
     cv_res = decoder.eval_model(
@@ -109,12 +130,21 @@ for sub in df_STIMON["sub"].unique():
         save_data=False,
     )
 
-    df_comp_STIM = df_comp_STIM.append(
-        {
-            "Test Performance": cv_res.score_test[0],
-            "Subject": sub,
-            "Model Type": "STIM ON-OFF->OFF Predict",
-        },
-        ignore_index=True,
+    df_comp_STIM = pd.concat(
+        [
+            df_comp_STIM,
+            pd.DataFrame(
+                {
+                    "Test Performance": cv_res.score_test[0],
+                    "Subject": sub,
+                    "Model Type": "STIM ON-OFF->OFF Predict",
+                },
+                index=[0],
+            ),
+        ]
     )
-df_comp_STIM.to_csv("df_STIM_ON_OFF_predict.csv")
+
+if RUN_PARRM_STIM_DATA is True:
+    df_comp_STIM.to_csv("df_STIM_ON_OFF_predict_parrm.csv")
+else:
+    df_comp_STIM.to_csv("df_STIM_ON_OFF_predict.csv")

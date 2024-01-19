@@ -10,7 +10,7 @@ from py_neuromodulation import nm_decode, nm_RMAP, nm_plots, nm_stats
 # 1. leave one cohort out
 PATH_CROSS_VAL_BASE = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_fft"
 
-df = pd.DataFrame()
+l_ = []
 
 # [
 #        "XGB_performance_leave_1_cohort_out_RMAP.npy",
@@ -36,22 +36,25 @@ for model in ["LMGridPoints", "LM"]:
 
         for cohort_test in list(p.keys()):
             for sub_test in list(p[cohort_test].keys()):
-                df = df.append(
-                    {
-                        "Test Performance": p[cohort_test][sub_test].score_test[0],
-                        "Movement Detection Rate" : p[cohort_test][sub_test].mov_detection_rates_test[0],
-                        "cohort_test": cohort_test,
-                        "sub_test": sub_test,
-                        "Model Type": model_sel_name,
-                        "Cross Validation Type": [
-                            "leave one cohort out",
-                            "leave one subject out across cohorts",
-                            "leave one subject out within cohorts",
-                        ][idx],
-                    },
-                    ignore_index=True,
+                l_.append(
+                    pd.Series(
+                        {
+                            "Test Performance": p[cohort_test][sub_test].score_test[0],
+                            "Movement Detection Rate" : p[cohort_test][sub_test].mov_detection_rates_test[0],
+                            "cohort_test": cohort_test,
+                            "sub_test": sub_test,
+                            "Model Type": model_sel_name,
+                            "Cross Validation Type": [
+                                "leave one cohort out",
+                                "leave one subject out across cohorts",
+                                "leave one subject out within cohorts",
+                            ][idx],
+                        }
+                    )
                 )
 
+df = pd.DataFrame(l_)
+df.to_csv("across_patient_decoding_per_ba_mov_det.csv")
 # print performances
 print(df[(df["Cross Validation Type"] == "leave one subject out within cohorts") & (df["Model Type"] == "GridPoints")]["Test Performance"].mean())
 print(df[(df["Cross Validation Type"] == "leave one subject out within cohorts") & (df["Model Type"] == "GridPoints")]["Test Performance"].std())

@@ -14,7 +14,6 @@ from py_neuromodulation import (
 
 # 1. make ch_all dict
 
-# 2.
 PATH_ch_all = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_fft\channel_all.npy"
 
 

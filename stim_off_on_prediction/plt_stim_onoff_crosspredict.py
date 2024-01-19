@@ -6,14 +6,40 @@ import seaborn as sb
 from matplotlib import pyplot as plt
 from py_neuromodulation import nm_stats, nm_across_patient_decoding, nm_decode, nm_plots
 
-df_1 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_predict.csv")
-df_2 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF.csv")
+COMPARE_MEAN_PER = True
+if COMPARE_MEAN_PER is True:
+    dfs_ = []
+    for RUN_PARRM_STIM_DATA in [True, False]:
+        if RUN_PARRM_STIM_DATA is True:
+            df_1 = pd.read_csv(
+                "stim_off_on_prediction\\df_STIM_ON_OFF_predict_parrm.csv"
+            )
+            df_2 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_parrm.csv")
+        else:
+            df_1 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_predict.csv")
+            df_2 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF.csv")
+        df_comb = pd.concat([df_1, df_2])
+        df_comb["PARRM"] = RUN_PARRM_STIM_DATA
+        dfs_.append(df_comb)
+    print(pd.concat(dfs_).groupby(["Model Type", "PARRM"]).mean())
+
+
+RUN_PARRM_STIM_DATA = True
+if RUN_PARRM_STIM_DATA is True:
+    df_1 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_predict_parrm.csv")
+    df_2 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_parrm.csv")
+else:
+    df_1 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_predict.csv")
+    df_2 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF.csv")
 df_comb = pd.concat([df_1, df_2])
 
 df = df_comb
 x_col = "Model Type"
 y_col = "Test Performance"
-PATH_SAVE = os.path.join("figure", "stim_off_on_comp_predict_all_boxplot.pdf")
+if RUN_PARRM_STIM_DATA is True:
+    PATH_SAVE = os.path.join("figure", "stim_off_on_comp_predict_all_boxplot_parrm.pdf")
+else:
+    PATH_SAVE = os.path.join("figure", "stim_off_on_comp_predict_all_boxplot.pdf")
 
 hue = None
 order_ = [
