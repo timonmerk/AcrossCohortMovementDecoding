@@ -11,7 +11,6 @@ from multiprocessing import Pool
 
 
 def run_decoding(PATH_OUT_RUN):
-
     RUN_NAME = os.path.basename(PATH_OUT_RUN)
     PATH_OUT = os.path.dirname(PATH_OUT_RUN)
     feature_reader = nm_analysis.Feature_Reader(
@@ -25,7 +24,10 @@ def run_decoding(PATH_OUT_RUN):
         seg_cut = []
         for mov_start in mov_starts:
             for i in range(5):
-                seg_cut.append(mov_start + i)
+                seg_cut.append(
+                    mov_start + i
+                )  # those were cut out to make sure that the patient are moving
+                # additionally the tongue movement was cut out
 
         ind_cut = np.concatenate(
             (np.where(feature_reader.feature_arr["mov"] == 11)[0], seg_cut)
@@ -72,7 +74,6 @@ def run_decoding(PATH_OUT_RUN):
 
 
 if __name__ == "__main__":
-
     PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_out_fft"
     files_all = []
     for cohort in ["Pittsburgh", "Beijing", "Washington", "Berlin"]:

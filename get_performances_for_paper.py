@@ -6,6 +6,31 @@ from matplotlib import pyplot as plt
 import pickle
 import numpy as np
 
+# get examplar time series for sw motivation
+PATH_RUN = r"C:\Users\ICN_admin\Documents\Datasets\Berlin\sub-002\ses-EcogLfpMedOff01\ieeg\sub-002_ses-EcogLfpMedOff01_task-SelfpacedRotationR_acq-StimOff_run-01_ieeg.vhdr"
+raw = mne.io.read_raw_brainvision(PATH_RUN, preload=True)
+ch_names = [
+    c for c in raw.ch_names if "ECOG" in c and "6" in c or "SQUARED_ROTATION" in c
+]  # or "LFP" in c
+raw_p = raw.pick(picks=ch_names)
+# raw_p.filter(l_freq=14, h_freq=28)
+raw_p.plot()
+
+idx_ = np.where(np.logical_and(raw.times > 77.325, raw.times < 77.579))
+raw_p.get_data()[0, idx_]
+
+plt.figure(figsize=(4, 3), dpi=300)
+plt.plot(
+    (1000 * 1000 / 1375) * (raw_p.times[idx_] - raw_p.times[idx_][0]),
+    (1000 * 1000) * raw_p.get_data()[0, idx_][0, ::-1],
+)
+plt.xlabel("Time [ms]")
+plt.ylabel("Amplitude [uV]")
+plt.title("Example time series for SW motivation")
+plt.tight_layout()
+plt.savefig("figure\\example_time_series_sw_motivation.pdf", bbox_inches="tight")
+
+
 # get recording durattion per patient
 ch_all = np.load("features_out_fft\\channel_all.npy", allow_pickle=True).item()
 df_durations = pd.DataFrame(
