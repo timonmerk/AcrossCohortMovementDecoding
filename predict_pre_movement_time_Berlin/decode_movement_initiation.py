@@ -32,7 +32,9 @@ for sub in subs:
             data_concat.append(ch_all["Berlin"][sub][ch][recs]["data"])
             label_concat.append(ch_all["Berlin"][sub][ch][recs]["label"])
         data_concat = np.concatenate(data_concat)
+        data_concat_orig = data_concat.copy()
         label_concat = np.concatenate(label_concat)
+        label_concat_orig = label_concat.copy()
 
         # first remove the movement labels
         # for every instance where label is 1 set the previous 5 values 2
@@ -43,10 +45,13 @@ for sub in subs:
         for idx in idx_:
             if idx >= 0 and idx < label_concat.shape[0]:
                 label_concat[idx - 20 : idx + 1] = 2
+                label_concat[idx - 50 : idx - 20] = 3  # rest segment
 
-        idx_select = np.where(label_concat != 1)[0]
+        # select indexes only where label is not 1 and not 0
+        idx_select = np.where(np.logical_and(label_concat != 1, label_concat != 0))[0]
+
         data_concat = data_concat[idx_select, :]
-        label_concat = label_concat[idx_select] > 0
+        label_concat = label_concat[idx_select] == 2
 
         # run a 3 fold non-shuffled Kfold cross validation and report the mean balanced accuracy
         model = linear_model.LogisticRegression(class_weight="balanced")
@@ -88,13 +93,33 @@ for sub in subs:
             ]
         )
 
+        # add prediction of a single model of the movement phase
+        model_train = linear_model.LogisticRegression(class_weight="balanced")
+        model_train.fit(data_concat, label_concat.astype(int))
+        # check in the original label
+        idx_move = np.where(np.diff(label_concat_orig.astype(int)) == 1)
+
+        predict_orig = model_train.predict(data_concat_orig)
+        list_mov = []
+        for idx in idx_move[0]:
+            if idx >= 0 and (idx + 20) < predict_orig.shape[0]:
+                list_mov.append(predict_orig[idx : idx + 20])
+
+        mean_mov_prediction = np.array(list_mov).mean(axis=0)
+
         if "Precentral" in region:
             epochs_pr_mc, epochs_true_mc = nm_analysis.Feature_Reader.get_epochs(
                 np.expand_dims(predict, axis=(1, 2)), label_concat, 7, 10, 0.1
             )
 
             precentral_y_predict.append(
-                np.squeeze(np.mean(epochs_pr_mc, axis=0).T)[:55]
+                np.concatenate(
+                    (
+                        np.squeeze(np.mean(epochs_pr_mc, axis=0).T)[:55],
+                        mean_mov_prediction,
+                    ),
+                    axis=0,
+                )
             )
             # precentral_y_true.append(label_concat)
         elif "Postcentral" in region:
@@ -102,13 +127,19 @@ for sub in subs:
                 np.expand_dims(predict, axis=(1, 2)), label_concat, 7, 10, 0.1
             )
             postcentral_y_predict.append(
-                np.squeeze(np.mean(epochs_pr_sc, axis=0).T)[:55]
+                np.concatenate(
+                    (
+                        np.squeeze(np.mean(epochs_pr_sc, axis=0).T)[:55],
+                        mean_mov_prediction,
+                    ),
+                    axis=0,
+                )
             )
             # postcentral_y_true.append(label_concat)
 
 
 plt.figure(figsize=(3.5, 3), dpi=300)
-time_ = np.arange(-5.5, 0, 0.1)
+time_ = np.arange(-5.5, 2, 0.1)
 
 for i in range(len(precentral_y_predict)):
     plt.plot(time_, precentral_y_predict[i], color="#45a778", alpha=0.2)
@@ -117,20 +148,33 @@ for i in range(len(postcentral_y_predict)):
 
 plt.plot(
     time_,
-    np.squeeze(np.mean(epochs_pr_mc, axis=0).T)[:55],
+    np.concatenate(
+        (
+            np.squeeze(np.mean(epochs_pr_mc, axis=0).T)[:55],
+            np.array(precentral_y_predict).mean(axis=0)[-20:],
+        ),
+        axis=0,
+    ),
     label="motor cortex",
     color="#45a778",
     linewidth=3,
 )
 plt.plot(
     time_,
-    np.squeeze(np.mean(epochs_pr_sc, axis=0).T)[:55],
+    np.concatenate(
+        (
+            np.squeeze(np.mean(epochs_pr_sc, axis=0).T)[:55],
+            np.array(postcentral_y_predict).mean(axis=0)[-20:],
+        ),
+        axis=0,
+    ),
     label="somatosensory cortex",
     color="#3c6682",
     linewidth=3,
 )
 plt.legend()
-plt.xlabel("Time till movement onset[s]")
+plt.xlim(-4.5, 2)
+plt.xlabel("Time around movement onset[s]")
 plt.ylabel("Movement intention prediction")
 plt.title("Movement intention prediction")
 plt.tight_layout()
