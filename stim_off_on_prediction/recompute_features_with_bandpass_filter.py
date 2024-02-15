@@ -31,7 +31,7 @@ def est_features_run(PATH_RUN):
 
         return settings
 
-    PATH_OUT_BASE = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_parrm_removed"
+    PATH_OUT_BASE = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_bandstop_filtered"
     PATH_BIDS = r"C:\Users\ICN_admin\Documents\Datasets\Berlin"
     PATH_OUT = os.path.join(PATH_OUT_BASE, "Berlin")
 
@@ -53,75 +53,23 @@ def est_features_run(PATH_RUN):
         for idx, ch in enumerate(raw.ch_names)
         if "ECOG" in ch and ch not in raw.info["bads"]
     ]
-    parrm = nm_artifacts.PARRMArtifactRejection(data[ecog_idx, :], sfreq, 130)
-    filtered_data = parrm.filter_data()
+    # parrm = nm_artifacts.PARRMArtifactRejection(data[ecog_idx, :], sfreq, 130)
+    # filtered_data = parrm.filter_data()
+    # bandstop filter the data between 100 Hz and 160 Hz
 
-    PLT_ = True
+    filtered_data = mne.filter.filter_data(
+        data=data[ecog_idx, :],
+        sfreq=sfreq,
+        l_freq=160,
+        h_freq=100,
+        method="fir",
+        verbose=False,
+        l_trans_bandwidth=5,
+        h_trans_bandwidth=5,
+    )
+
+    PLT_ = False
     if PLT_ is True:
-
-        # plot here a simple welch PSD of the filtered data using scipy
-
-        filtered_data_bandstop = mne.filter.filter_data(
-            data=data[ecog_idx, :],
-            sfreq=sfreq,
-            l_freq=160,
-            h_freq=100,
-            method="fir",
-            verbose=False,
-            l_trans_bandwidth=5,
-            h_trans_bandwidth=5,
-        )
-
-        from scipy.signal import welch
-
-        ch_idx = 4
-
-        plt.figure(figsize=(12, 4), dpi=300)
-
-        for idx, spec_ in enumerate(["mov", "rest", "all"]):
-            plt.subplot(1, 3, idx + 1)
-            if spec_ == "mov":
-                idx_ = np.where(data[-2, :] == 1)[0]
-            elif spec_ == "rest":
-                idx_ = np.where(data[-2, :] == 0)[0]
-            else:
-                idx_ = np.arange(data.shape[1])
-
-            f, Pxx_parrm = welch(filtered_data[ch_idx, idx_], fs=sfreq, nperseg=1024)
-            f, Pxx = welch(data[ecog_idx[ch_idx], idx_], fs=sfreq, nperseg=1024)
-            f, Pxx_bandstop_filtered = welch(
-                filtered_data_bandstop[ch_idx, idx_], fs=sfreq, nperseg=1024
-            )
-
-            plt.plot(f, 10 * np.log10(Pxx), label="Raw")
-            plt.plot(f, 10 * np.log10(Pxx_parrm), label="PARRM filtered")
-            plt.plot(f, 10 * np.log10(Pxx_bandstop_filtered), label="Bandstop filtered")
-
-            plt.xlabel("Frequency [Hz]")
-            plt.ylabel("Power [dB]")
-            plt.title(f"PSD {spec_} data")
-            plt.xlim([0, 200])
-            plt.legend()
-
-        plt.suptitle("Welch PSD of PARRM filtered data")
-        plt.tight_layout()
-
-        # plot here also now a spectogram of the filtered data
-
-        from scipy.signal import spectrogram
-
-        spec = spectrogram(
-            filtered_data[0, :], fs=sfreq, nperseg=1024, noverlap=1024 - 100
-        )
-        plt.figure(figsize=(5, 3), dpi=300)
-        plt.pcolormesh(
-            spec[1], spec[0], 10 * np.log10(spec[2]), shading="gouraud", cmap="inferno"
-        )
-        plt.colorbar(label="dB")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Frequency [Hz]")
-        plt.title("Spectrogram of PARRM filtered data")
-
         plt.figure(figsize=(5, 3), dpi=300)
         start = 123000 - 300
         end = 129000 - 300
@@ -149,6 +97,36 @@ def est_features_run(PATH_RUN):
         plt.xlabel("Time [s]")
         plt.ylabel("Amplitude [a.u.]")
 
+        # plot also the stft
+        from scipy import signal, stats
+
+        f, t, Zxx = signal.stft(data[ecog_idx[0], start:end], sfreq, nperseg=sfreq)
+        plt.figure(figsize=(5, 3), dpi=300)
+        plt.pcolormesh(t, f, stats.zscore(np.abs(Zxx), axis=0), shading="gouraud")
+        plt.title("STFT Magnitude")
+        plt.ylabel("Frequency [Hz]")
+        plt.xlabel("Time [sec]")
+        plt.colorbar()
+        plt.ylim(0, 200)
+        plt.clim(-3, 10)
+        plt.show()
+
+        # and now from the filtered_data
+        f, t, Zxx = signal.stft(
+            filtered_data[ecog_idx[0], start:end], sfreq, nperseg=sfreq
+        )
+        plt.figure(figsize=(5, 3), dpi=300)
+        plt.pcolormesh(t, f, stats.zscore(np.abs(Zxx), axis=0), shading="gouraud")
+        plt.title("STFT Magnitude")
+        plt.ylabel("Frequency [Hz]")
+        plt.xlabel("Time [sec]")
+        plt.colorbar()
+        plt.ylim(0, 200)
+        plt.clim(-3, 10)
+        plt.show()
+
+    data[ecog_idx, :] = filtered_data
+
     # clean the data here:
 
     # cut for Berlin sub012 the last ECoG channel, due to None coordinates
@@ -156,8 +134,6 @@ def est_features_run(PATH_RUN):
     #    coord_list = coord_list[:-3]
     #    coord_names = coord_names[:-3]
     #    data = data[:-3, :]
-
-    data[ecog_idx, :] = filtered_data
 
     nm_channels = nm_define_nmchannels.set_channels(
         ch_names=raw.ch_names,
@@ -194,6 +170,7 @@ def est_features_run(PATH_RUN):
 
 
 if __name__ == "__main__":
+
     COMPUTE_FEATURES = True
 
     if COMPUTE_FEATURES is True:
@@ -215,17 +192,17 @@ if __name__ == "__main__":
             if "StimOn" in f.path and "EL016" not in f.path and "EL017" not in f.path
         ]
 
-        est_features_run(run_files_Berlin[0])
+        # est_features_run(run_files_Berlin[0])
 
         # setup parallel processing using joblib
         from joblib import Parallel, delayed
 
-        Parallel(n_jobs=len(run_files_Berlin[1:]))(
-            delayed(est_features_run)(run) for run in run_files_Berlin[1:]
+        Parallel(n_jobs=len(run_files_Berlin[:]))(
+            delayed(est_features_run)(run) for run in run_files_Berlin[:]
         )
 
     cohort_runner = nm_cohortwrapper.CohortRunner(
-        outpath=r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_parrm_removed",
+        outpath=r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_bandstop_filtered",
         cohorts={"Berlin": ""},
     )
 

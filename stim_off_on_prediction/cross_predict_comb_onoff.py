@@ -8,7 +8,8 @@ import seaborn as sb
 from matplotlib import pyplot as plt
 from py_neuromodulation import nm_stats, nm_across_patient_decoding, nm_decode, nm_plots
 
-RUN_PARRM_STIM_DATA = True
+RUN_PARRM_STIM_DATA = False
+RUN_BANDSTOP_FILTER_EST = True
 
 df_rmap_corr = pd.read_csv("across patient running\\RMAP\\df_best_func_rmap_ch.csv")
 
@@ -33,6 +34,13 @@ ap_runner = nm_across_patient_decoding.AcrossPatientRunner(
 
 ap_runner_parrm = nm_across_patient_decoding.AcrossPatientRunner(
     outpath=r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_parrm_removed",
+    cohorts=["Berlin"],
+    use_nested_cv=False,
+    load_channel_all=True,
+)
+
+ap_runner_bandstop = nm_across_patient_decoding.AcrossPatientRunner(
+    outpath=r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_bandstop_filtered",
     cohorts=["Berlin"],
     use_nested_cv=False,
     load_channel_all=True,
@@ -68,6 +76,8 @@ for sub in df_STIMON["sub"].unique():
 
     if RUN_PARRM_STIM_DATA is True:
         X_on, y_on = get_data_stim(ap_runner_parrm, stim_on=True)
+    elif RUN_BANDSTOP_FILTER_EST is True:
+        X_on, y_on = get_data_stim(ap_runner_bandstop, stim_on=True)
     else:
         X_on, y_on = get_data_stim(ap_runner, stim_on=True)
 
@@ -145,6 +155,14 @@ for sub in df_STIMON["sub"].unique():
     )
 
 if RUN_PARRM_STIM_DATA is True:
-    df_comp_STIM.to_csv("df_STIM_ON_OFF_predict_parrm.csv")
+    df_comp_STIM.to_csv(
+        os.path.join("stim_off_on_prediction", "df_STIM_ON_OFF_predict_parrm.csv")
+    )
+elif RUN_BANDSTOP_FILTER_EST is True:
+    df_comp_STIM.to_csv(
+        os.path.join("stim_off_on_prediction", "df_STIM_ON_OFF_predict_bandstop.csv")
+    )
 else:
-    df_comp_STIM.to_csv("df_STIM_ON_OFF_predict.csv")
+    df_comp_STIM.to_csv(
+        os.path.join("stim_off_on_prediction", "df_STIM_ON_OFF_predict.csv")
+    )

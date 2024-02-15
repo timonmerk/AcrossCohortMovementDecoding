@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from py_neuromodulation import nm_stats, nm_across_patient_decoding, nm_decode, nm_plots
 
 RUN_PARRM_STIM_DATA = False
+RUN_BANDSTOP_FILTER_EST = True
 
 df_rmap_corr = pd.read_csv("across patient running\\RMAP\\df_best_func_rmap_ch.csv")
 
@@ -37,6 +38,13 @@ ap_runner_parrm = nm_across_patient_decoding.AcrossPatientRunner(
     load_channel_all=True,
 )
 
+ap_runner_bandstop = nm_across_patient_decoding.AcrossPatientRunner(
+    outpath=r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_bandstop_filtered",
+    cohorts=["Berlin"],
+    use_nested_cv=False,
+    load_channel_all=True,
+)
+
 
 def get_data_stim(ap_runner, sub: str, ch: str, stim_on: bool = True):
     X_train = []
@@ -46,6 +54,9 @@ def get_data_stim(ap_runner, sub: str, ch: str, stim_on: bool = True):
             if RUN_PARRM_STIM_DATA is True:
                 X_train.append(ap_runner_parrm.ch_all["Berlin"][sub][ch][f]["data"])
                 y_train.append(ap_runner_parrm.ch_all["Berlin"][sub][ch][f]["label"])
+            elif RUN_BANDSTOP_FILTER_EST is True:
+                X_train.append(ap_runner_bandstop.ch_all["Berlin"][sub][ch][f]["data"])
+                y_train.append(ap_runner_bandstop.ch_all["Berlin"][sub][ch][f]["label"])
             else:
                 X_train.append(ap_runner.ch_all["Berlin"][sub][ch][f]["data"])
                 y_train.append(ap_runner.ch_all["Berlin"][sub][ch][f]["label"])
@@ -71,6 +82,8 @@ for sub in df_STIMON["sub"].unique():
 
     if RUN_PARRM_STIM_DATA is True:
         X_test, y_test = get_data_stim(ap_runner_parrm, sub, ch, stim_on=True)
+    elif RUN_BANDSTOP_FILTER_EST is True:
+        X_test, y_test = get_data_stim(ap_runner_bandstop, sub, ch, stim_on=True)
     else:
         X_test, y_test = get_data_stim(ap_runner, sub, ch, stim_on=True)
     X_train, y_train = get_data_stim(ap_runner, sub, ch, stim_on=False)
@@ -148,6 +161,8 @@ for sub in df_STIMON["sub"].unique():
 
     if RUN_PARRM_STIM_DATA is True:
         X_train, y_train = get_data_stim(ap_runner_parrm, sub, ch, stim_on=True)
+    elif RUN_BANDSTOP_FILTER_EST is True:
+        X_train, y_train = get_data_stim(ap_runner_bandstop, sub, ch, stim_on=True)
     else:
         X_train, y_train = get_data_stim(ap_runner, sub, ch, stim_on=True)
     X_test, y_test = get_data_stim(ap_runner, sub, ch, stim_on=False)
@@ -185,10 +200,18 @@ for sub in df_STIMON["sub"].unique():
         ]
     )
 
-if RUN_PARRM_STIM_DATA is True:
-    df_comp_STIM.to_csv("df_STIM_ON_OFF_parrm.csv")
+SAVE = False
+if SAVE is True:
+    if RUN_PARRM_STIM_DATA is True:
+        df_comp_STIM.to_csv("df_STIM_ON_OFF_parrm.csv")
+    elif RUN_BANDSTOP_FILTER_EST is True:
+        df_comp_STIM.to_csv("df_STIM_ON_OFF_bandstop.csv")
+    else:
+        df_comp_STIM.to_csv("df_STIM_ON_OFF.csv")
 else:
-    df_comp_STIM.to_csv("df_STIM_ON_OFF.csv")
+    df_comp_STIM = pd.read_csv(
+        os.path.join("stim_off_on_prediction", "df_STIM_ON_OFF.csv")
+    )
 
 # add here also a combined model that used stim off and on as training and testing
 # but report the performances separate for both classes
@@ -201,7 +224,7 @@ nm_plots.plot_df_subjects(
     y_col="Test Performance Detection Rate",  # Test Performance
     title="Berlin Stim On/Off Comparison",
     hue=None,
-    figsize_tuple=(4, 5)
+    figsize_tuple=(4, 5),
     # PATH_SAVE=os.path.join("figure", f"stim_off_on_comp_predict.pdf"),
 )
 plt.ylim(0.5, 1.05)

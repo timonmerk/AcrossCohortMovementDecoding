@@ -51,6 +51,7 @@ def run_decoding(PATH_OUT_RUN):
 
 if __name__ == "__main__":
     PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_parrm_removed"
+    PATH_OUT = r"C:\Users\ICN_admin\Documents\Paper Decoding Toolbox\AcrossCohortMovementDecoding\features_stim_bandstop_filtered"
     files_all = []
 
     subs = ["002", "005", "006", "007", "008", "009"]
@@ -75,5 +76,5 @@ if __name__ == "__main__":
         print(f"ba: {performances[sub][ch]['performance_test']}")
         print(f"mdr: {performances[sub][ch]['mov_detection_rates_test']}")
 
-    pool = Pool(processes=50)
-    pool.map(run_decoding, files_all)
+    # pool = Pool(processes=50)
+    # pool.map(run_decoding, files_all)

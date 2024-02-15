@@ -19,9 +19,70 @@ if COMPARE_MEAN_PER is True:
             df_1 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_predict.csv")
             df_2 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF.csv")
         df_comb = pd.concat([df_1, df_2])
-        df_comb["PARRM"] = RUN_PARRM_STIM_DATA
+        df_comb["artifact_rejection_method"] = (
+            "PARRM" if RUN_PARRM_STIM_DATA else "None"
+        )
         dfs_.append(df_comb)
-    print(pd.concat(dfs_).groupby(["Model Type", "PARRM"]).mean())
+
+    # add here the bandstop filtered option
+    df_1 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_predict_bandstop.csv")
+    df_2 = pd.read_csv("stim_off_on_prediction\\df_STIM_ON_OFF_bandstop.csv")
+    df_comb = pd.concat([df_1, df_2])
+    df_comb["artifact_rejection_method"] = "Bandstop Filtering"
+    dfs_.append(df_comb)
+
+    print(pd.concat(dfs_).groupby(["Model Type", "artifact_rejection_method"]).mean())
+
+# plot here the grouped boxplot:
+df_plt = pd.concat(dfs_)
+
+plt.figure(figsize=(10, 6), dpi=300)
+order_ = [
+    "STIM OFF",
+    "STIM ON",
+    "STIM OFF->ON Predict",
+    "STIM ON->OFF Predict",
+    "STIM ON-OFF->OFF Predict",
+    "STIM ON-OFF->ON Predict",
+]
+hue_order = ["None", "PARRM", "Bandstop Filtering"]
+
+ax = sb.boxplot(
+    x="Model Type",
+    y="Test Performance",
+    order=order_,
+    hue="artifact_rejection_method",
+    data=df_plt,
+    dodge=True,
+    palette="viridis",
+    hue_order=hue_order,
+)
+n_hues = 3
+handles, labels = ax.get_legend_handles_labels()
+l = plt.legend(
+    handles[0:n_hues],
+    labels[0:n_hues],
+    bbox_to_anchor=(1.05, 1),
+    loc=2,
+    title="Artifact rejection method",
+    borderaxespad=0.0,
+)
+sb.swarmplot(
+    x="Model Type",
+    y="Test Performance",
+    order=order_,
+    hue="artifact_rejection_method",
+    data=df_plt,
+    dodge=True,
+    palette="viridis",
+    s=5,
+    hue_order=hue_order,
+)
+
+plt.xticks(rotation=90)
+plt.title("Stim ON / OFF Performances with different artifact rejection methods")
+plt.tight_layout()
+plt.savefig(os.path.join("figure", "stim_on_off_art_reject_none_parrm_bandpass.pdf"))
 
 
 RUN_PARRM_STIM_DATA = True
@@ -102,8 +163,6 @@ if PATH_SAVE is not None:
         PATH_SAVE,
         bbox_inches="tight",
     )
-
-nm_plots.plot_df_subjects()
 
 plt.figure(figsize=(6, 5), dpi=300)
 sb.barplot(

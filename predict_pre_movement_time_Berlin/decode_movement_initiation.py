@@ -137,6 +137,42 @@ for sub in subs:
             )
             # postcentral_y_true.append(label_concat)
 
+# plot a simpole figure that shows the time -4 to -2 seconds shaded with legend label "rest"
+# and the time -2 to 0 seconds shaded with legend label "movement intention"
+
+plt.figure(figsize=(4, 3), dpi=300)
+time_ = np.arange(-5.5, 2, 0.1)
+plt.fill_between(
+    time_[np.where(np.logical_and(time_ > -4, time_ < -2))],
+    0,
+    1,
+    color="dimgray",
+    label="Rest",
+)
+plt.fill_between(
+    time_[np.where(np.logical_and(time_ > -2, time_ < 0))],
+    0,
+    1,
+    color="lightgray",
+    label="Movement intention",
+)
+
+movement_simulation = np.zeros(time_.shape[0])
+movement_simulation[np.where(np.logical_and(time_ > 0, time_ < 2))] = 1
+plt.plot(time_, movement_simulation, label="Movement", color="black")
+# move legend to the right of the plot
+plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+plt.legend()
+plt.xlabel("Time around movement onset [s]")
+plt.ylabel("Movement trace [a.u.]")
+plt.title("Movement intention training")
+plt.tight_layout()
+plt.savefig("figure\\movement_intention_training_illustration.pdf")
+
+
+plt.fill_between(time_[-20:], 0, 1, color="#f2f2f2")
+plt.fill_between(time_[:55], 0, 1, color="#f2f2f2", label="movement intention")
+
 
 plt.figure(figsize=(3.5, 3), dpi=300)
 time_ = np.arange(-5.5, 2, 0.1)
@@ -156,7 +192,7 @@ plt.plot(
         axis=0,
     ),
     label="motor cortex",
-    color="#45a778",
+    color="#3c6682",
     linewidth=3,
 )
 plt.plot(
@@ -169,12 +205,12 @@ plt.plot(
         axis=0,
     ),
     label="somatosensory cortex",
-    color="#3c6682",
+    color="#45a778",
     linewidth=3,
 )
 plt.legend()
 plt.xlim(-4.5, 2)
-plt.xlabel("Time around movement onset[s]")
+plt.xlabel("Time around movement onset [s]")
 plt.ylabel("Movement intention prediction")
 plt.title("Movement intention prediction")
 plt.tight_layout()
@@ -217,8 +253,11 @@ df_res = df_res.replace("Precentral_R", "Precentral")
 df_res = df_res.replace("Postcentral_L", "Postcentral")
 df_res = df_res.replace("Postcentral_R", "Postcentral")
 
+df_res = df_res.replace("Precentral", "motor cortex")
+df_res = df_res.replace("Postcentral", "somatosensory cortex")
+
 # plot with a swarmplot and a boxplot on top, x axis region
-plt.figure(figsize=(3.5, 3), dpi=300)
+plt.figure(figsize=(4.5, 3), dpi=300)
 
 ax = sns.swarmplot(
     x="region",
@@ -226,7 +265,13 @@ ax = sns.swarmplot(
     data=df_res,
     color=".25",
 )
-ax = sns.boxplot(x="region", y="ba", data=df_res, palette="viridis")
+ax = sns.boxplot(
+    x="region",
+    y="ba",
+    data=df_res,
+    palette="viridis",
+    order=["motor cortex", "somatosensory cortex"],
+)
 ax.set_xlabel("Region")
 ax.set_ylabel("Balanced Accuracy")
 ax.set_title("Movement intention performance")

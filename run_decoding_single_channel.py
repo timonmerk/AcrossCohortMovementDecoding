@@ -65,9 +65,8 @@ def run_decoding(PATH_OUT_RUN):
     )
 
     performances = feature_reader.run_ML_model(
-        estimate_channels=False,
+        estimate_channels=True,
         estimate_gridpoints=False,
-        estimate_all_channels_combined=True,
         save_results=True,
         output_name="LM_all_comb",
     )
@@ -84,7 +83,7 @@ if __name__ == "__main__":
             ]
         )
     files_all = np.concatenate(files_all)
-    # run_decoding(files_all[100])
+    run_decoding(files_all[10])
 
     pool = Pool(processes=50)
     pool.map(run_decoding, files_all)
