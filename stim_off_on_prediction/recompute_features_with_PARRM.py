@@ -76,6 +76,107 @@ def est_features_run(PATH_RUN):
 
         ch_idx = 4
 
+        # None
+        idx_mov = np.where(data[-2, :] == 1)[0]
+        idx_rest = np.where(data[-2, :] == 0)[0]
+
+        plt.figure(figsize=(12, 4), dpi=300)
+        plt.suptitle("PSD Movement and Rest")
+
+        plt.subplot(1, 3, 1)
+        f, Pxx_mov = welch(data[ecog_idx[ch_idx], idx_mov], fs=sfreq, nperseg=1024)
+        f, Pxx_rest = welch(data[ecog_idx[ch_idx], idx_rest], fs=sfreq, nperseg=1024)
+        plt.plot(f, 10 * np.log10(Pxx_rest), color="b", label="Rest")
+        plt.plot(f, 10 * np.log10(Pxx_mov), color="r", label="Move")
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("Power [dB]")
+        plt.title("Without filter")
+        plt.xscale("log")
+        plt.legend()
+        plt.show()
+
+        plt.subplot(1, 3, 2)
+        f, Pxx_mov = welch(filtered_data[ch_idx, idx_mov], fs=sfreq, nperseg=1024)
+        f, Pxx_rest = welch(filtered_data[ch_idx, idx_rest], fs=sfreq, nperseg=1024)
+        plt.plot(f, 10 * np.log10(Pxx_rest), color="b", label="Rest")
+        plt.plot(f, 10 * np.log10(Pxx_mov), color="r", label="Move")
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("Power [dB]")
+        plt.title("PARRM Filtered")
+        # use log x axis
+        plt.xscale("log")
+        plt.legend()
+
+        plt.subplot(1, 3, 3)
+        f, Pxx_mov = welch(
+            filtered_data_bandstop[ch_idx, idx_mov], fs=sfreq, nperseg=1024
+        )
+        f, Pxx_rest = welch(
+            filtered_data_bandstop[ch_idx, idx_rest], fs=sfreq, nperseg=1024
+        )
+        plt.plot(f, 10 * np.log10(Pxx_rest), color="b", label="Rest")
+        plt.plot(f, 10 * np.log10(Pxx_mov), color="r", label="Move")
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("Power [dB]")
+        plt.title("Bandstop Filter")
+        plt.xscale("log")
+        plt.legend()
+
+        plt.tight_layout()
+        plt.savefig("figure\\PSD_STIM_ON_MOVE_PARRM_BANDSTOP_comparison.pdf")
+        plt.show()
+
+        # idea: plot separate plots for PARRM, bandstop, None
+        plt.figure(figsize=(12, 4), dpi=300)
+
+        # None
+        idx_mov = np.where(data[-2, :] == 1)[0]
+        idx_rest = np.where(data[-2, :] == 0)[0]
+
+        f, Pxx_mov = welch(data[ecog_idx[ch_idx], idx_mov], fs=sfreq, nperseg=1024)
+        f, Pxx_rest = welch(data[ecog_idx[ch_idx], idx_rest], fs=sfreq, nperseg=1024)
+
+        # plt.subplot(1, 3, 1)
+        plt.plot(f, 10 * np.log10(Pxx_mov) - 10 * np.log10(Pxx_rest), label="Raw Data")
+        # plt.title("Raw data");
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("Power [dB]")
+        plt.xlim([0, 700])
+        plt.ylim([-6, 8])
+
+        f, Pxx_mov = welch(
+            filtered_data_bandstop[ch_idx, idx_mov], fs=sfreq, nperseg=1024
+        )
+        f, Pxx_rest = welch(
+            filtered_data_bandstop[ch_idx, idx_rest], fs=sfreq, nperseg=1024
+        )
+
+        # plt.subplot(1, 3, 2)
+        # plt.plot(f, 10 * np.log10(Pxx_mov) - 10 * np.log10(Pxx_rest), label="Bandstop filtered data")
+        # plt.title("Bandstop filtered data");
+        # plt.xlabel("Frequency [Hz]"); plt.ylabel("Power [dB]"); plt.xlim([0, 700]); plt.ylim([-6, 8])
+
+        f, Pxx_mov = welch(filtered_data[ch_idx, idx_mov], fs=sfreq, nperseg=1024)
+        f, Pxx_rest = welch(filtered_data[ch_idx, idx_rest], fs=sfreq, nperseg=1024)
+
+        # plt.subplot(1, 3, 3)
+        plt.plot(
+            f,
+            10 * np.log10(Pxx_mov) - 10 * np.log10(Pxx_rest),
+            label="PARRM filtered data",
+        )
+        # plt.title("PARRM filtered data");
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("Power [dB]")
+        plt.xlim([0, 700])
+        plt.ylim([-6, 8])
+        # plot a dotted horizontal line at 0
+        plt.axhline(y=0, color="k", linestyle="--", label="Baseline")
+        plt.legend()
+
+        plt.suptitle("Movement minus rest Welch PSD")
+        plt.tight_layout()
+
         plt.figure(figsize=(12, 4), dpi=300)
 
         for idx, spec_ in enumerate(["mov", "rest", "all"]):

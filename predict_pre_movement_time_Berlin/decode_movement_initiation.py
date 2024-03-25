@@ -174,27 +174,36 @@ plt.fill_between(time_[-20:], 0, 1, color="#f2f2f2")
 plt.fill_between(time_[:55], 0, 1, color="#f2f2f2", label="movement intention")
 
 
+PLT_MOTOR_CORTEX = False
+
 plt.figure(figsize=(3.5, 3), dpi=300)
 time_ = np.arange(-5.5, 2, 0.1)
 
-for i in range(len(precentral_y_predict)):
-    plt.plot(time_, precentral_y_predict[i], color="#45a778", alpha=0.2)
-for i in range(len(postcentral_y_predict)):
-    plt.plot(time_, postcentral_y_predict[i], color="#3c6682", alpha=0.2)
+if PLT_MOTOR_CORTEX:
+    for i in range(len(precentral_y_predict)):
+        plt.plot(
+            time_, precentral_y_predict[i], color="gray", alpha=0.2  # "#45a778"
+        )  # motor cortex
 
-plt.plot(
-    time_,
-    np.concatenate(
-        (
-            np.squeeze(np.mean(epochs_pr_mc, axis=0).T)[:55],
-            np.array(precentral_y_predict).mean(axis=0)[-20:],
+for i in range(len(postcentral_y_predict)):
+    plt.plot(
+        time_, postcentral_y_predict[i], color="black", alpha=0.2  # "#3c6682"
+    )  # somatosensory cortex
+
+if PLT_MOTOR_CORTEX:
+    plt.plot(
+        time_,
+        np.concatenate(
+            (
+                np.squeeze(np.mean(epochs_pr_mc, axis=0).T)[:55],
+                np.array(precentral_y_predict).mean(axis=0)[-20:],
+            ),
+            axis=0,
         ),
-        axis=0,
-    ),
-    label="motor cortex",
-    color="#3c6682",
-    linewidth=3,
-)
+        label="motor cortex",
+        color="#45a778",
+        linewidth=3,
+    )
 plt.plot(
     time_,
     np.concatenate(
@@ -204,8 +213,8 @@ plt.plot(
         ),
         axis=0,
     ),
-    label="somatosensory cortex",
-    color="#45a778",
+    label="Somatosensory cortex",
+    color="black",  # "#3c6682"
     linewidth=3,
 )
 plt.legend()
@@ -214,7 +223,7 @@ plt.xlabel("Time around movement onset [s]")
 plt.ylabel("Movement intention prediction")
 plt.title("Movement intention prediction")
 plt.tight_layout()
-plt.savefig("figure\\mean_prediction_movement_intention.pdf")
+plt.savefig("figure\\mean_prediction_movement_intention_without_motor_cortex.pdf")
 plt.show()
 
 
@@ -257,6 +266,8 @@ df_res = df_res.replace("Precentral", "motor cortex")
 df_res = df_res.replace("Postcentral", "somatosensory cortex")
 
 # plot with a swarmplot and a boxplot on top, x axis region
+
+df_res = df_res.query("region == 'somatosensory cortex'")
 plt.figure(figsize=(4.5, 3), dpi=300)
 
 ax = sns.swarmplot(
@@ -269,12 +280,16 @@ ax = sns.boxplot(
     x="region",
     y="ba",
     data=df_res,
-    palette="viridis",
-    order=["motor cortex", "somatosensory cortex"],
+    # palette="viridis",
+    # ax=ax,
+    palette="gray",
+    order=["somatosensory cortex"],  # "motor cortex",
 )
 ax.set_xlabel("Region")
 ax.set_ylabel("Balanced Accuracy")
 ax.set_title("Movement intention performance")
 plt.tight_layout()
-plt.savefig("figure\\Mean_performance_Berlin_movement_intention.pdf")
+plt.savefig(
+    "figure\\Mean_performance_Berlin_movement_intention_SomatosensoryCortex_only.pdf"
+)
 plt.show()

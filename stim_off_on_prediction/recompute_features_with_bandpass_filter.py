@@ -68,7 +68,7 @@ def est_features_run(PATH_RUN):
         h_trans_bandwidth=5,
     )
 
-    PLT_ = False
+    PLT_ = True
     if PLT_ is True:
         plt.figure(figsize=(5, 3), dpi=300)
         start = 123000 - 300
